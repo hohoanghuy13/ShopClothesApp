@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "382350747267",
+    "firebase_url": "https://dbshopclothes-default-rtdb.firebaseio.com",
+    "project_id": "dbshopclothes",
+    "storage_bucket": "dbshopclothes.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:382350747267:android:bb084959c2ff7f0edc9db6",
+        "android_client_info": {
+          "package_name": "com.example.shopclothesapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAceDXgXEYQ5jqWLmz2egZKBMyUu96DJRA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

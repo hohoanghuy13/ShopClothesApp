@@ -1,28 +1,46 @@
 package com.example.shopclothesapp;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.viewpager2.widget.ViewPager2;
 
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.View;
 
+import com.example.shopclothesapp.adapters.CardProductAdapter;
 import com.example.shopclothesapp.adapters.SliderAdapter;
 import com.example.shopclothesapp.databinding.ActivityMainBinding;
+import com.example.shopclothesapp.repositories.Categories;
 import com.example.shopclothesapp.repositories.Slider;
+import com.example.shopclothesapp.viewmodels.CardProductViewModel;
 import com.example.shopclothesapp.viewmodels.MainViewModel;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 public class MainActivity extends AppCompatActivity {
     MainViewModel mainViewModel;
     ActivityMainBinding mainBinding;
     SliderAdapter sliderAdapter;
+    CardProductAdapter cardProductAdapter;
     List<Slider> currentSliders = new ArrayList<>();
+    FirebaseDatabase database = FirebaseDatabase.getInstance();
+    DatabaseReference myReferences = database.getReference("categories");
+
     private final Handler handler = new Handler();
     private final Runnable runnable = new Runnable() {
         @Override
@@ -46,6 +64,16 @@ public class MainActivity extends AppCompatActivity {
 
         sliderAdapter = new SliderAdapter();
         mainViewModel.getSliderLiveData().observe(this, sliders -> currentSliders = sliders);
+
+        cardProductAdapter = new CardProductAdapter();
+        mainViewModel.getCardsLiveData().observe(this, new Observer<List<CardProductViewModel>>() {
+            @Override
+            public void onChanged(List<CardProductViewModel> cardProductViewModels) {
+                cardProductAdapter.setCardProductViewModels(cardProductViewModels);
+                mainBinding.rvProducts.setLayoutManager(new GridLayoutManager(MainActivity.this, 2));
+                mainBinding.rvProducts.setAdapter(cardProductAdapter);
+            }
+        });
 
         currentSliders.add(new Slider("https://alabaster-drop-b52.notion.site/image/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F5fd31f3f-d417-4239-a99d-6bd3d5633d38%2F54bd0584-aa75-4c4c-8b66-f11053a228f6%2Fmovie_webview_basic_java.png?table=block&id=6a302749-6e34-4571-894a-c60ea2bb6f79&spaceId=5fd31f3f-d417-4239-a99d-6bd3d5633d38&width=2000&userId=&cache=v2"));
         currentSliders.add(new Slider("https://alabaster-drop-b52.notion.site/image/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F5fd31f3f-d417-4239-a99d-6bd3d5633d38%2F51b5916d-a737-4a6d-b593-9bb6b6597f9a%2Fmovie_webview_pro_java.png?table=block&id=3178d203-e678-4e44-a951-994850cc81af&spaceId=5fd31f3f-d417-4239-a99d-6bd3d5633d38&width=2000&userId=&cache=v2"));
@@ -74,6 +102,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
         mainBinding.vpBanner.setPageTransformer(new ZoomOutPageTransformer());
+
+        readDatabase();
     }
 
     @Override
@@ -86,5 +116,31 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         handler.postDelayed(runnable, 5000);
+    }
+
+    private void readDatabase() {
+        // Read from the database
+        myReferences.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                // This method is called once with the initial value and again
+                // whenever data at this location is updated.
+                for(DataSnapshot dataCategory : dataSnapshot.getChildren()) {
+                    Categories category = dataCategory.getValue(Categories.class);
+
+                    if(category != null) {
+                        String id = dataCategory.getKey();
+                        String name = category.getCategoryName();
+                        Log.d("TAG", "Value is: " + name + ", Key: " + id);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                // Failed to read value
+                Log.w("TAG", "Failed to read value.", error.toException());
+            }
+        });
     }
 }
